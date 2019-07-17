@@ -1,8 +1,9 @@
 import numpy as np
-from IPython.display import HTML, display
 
 RED = 1
 BLACK = -1
+ACTIVE = 0
+DRAW = 2
 
 class GameBoard:
 
@@ -11,13 +12,17 @@ class GameBoard:
         # If no previous board given, start with a blank board
         if not board:
             self.board = np.zeros((height, width), dtype=int)
+            self.state = ACTIVE
         else:
+            check_win()
             self.board = board
 
         self.connect_num = connect_num - 1
+        self.last_move = (0,0)
+        self.num_moves = np.sum(np.abs(self.board))
 
         # Calculate which player moves next, with RED always starting on an empty board
-        self.next_player = BLACK if np.sum(self.board) > 0 else RED
+        self.next_player = RED if self.num_moves % 2 == 0 else BLACK
 
 # Make one move at the specified location with the specified color
     def make_move(self, index, player=None):
@@ -41,8 +46,9 @@ class GameBoard:
                 nboard[index][idx] = self.next_player
                 self.next_player *= -1
                 self.board = np.rot90(nboard, 1)
-
-                self.print_board(x=index, y=idx)
+                self.last_move = (index, idx)
+                if sum(self.board.shape) == self.num_moves:
+                    self.state = DRAW
                 return True
         except IndexError:
             pass
@@ -50,32 +56,36 @@ class GameBoard:
         print("Invalid move!")
         return False
 
-    def check_win(self, x, y):
+    def check_win(self):
+
+        x, y = self.last_move
 
         def check_row(row):
+            print(row)
             count = 0
-            last_color = 1
+            last_color = 2
             for spot in row:
                 if spot:
                     if spot == last_color:
                         count += 1
                         if count == self.connect_num:
+                            self.state = self.next_player * -1
                             return True
                     else:
                         count = 0
                     last_color = spot
             return False
 
-        vert = check_row(self.board[y])
-        np.rot90(self.board, 3)
-        horz = check_row(self.board[x])
-        np.rot90(self.board, 1)
+        # Check horizontal win
+        horizontal = check_row(self.board[x])
 
-        print(f"horzwin = {horz}, verwin = {vert}")
+        # Check vertical win
+        rotated_board = np.rot90(self.board, 3)
+        vertical = check_row(rotated_board[x])
 
-        return True if horz or vert else False
+        return vertical or horizontal
 
-    def print_board(self, x, y):
+    def print_board(self):
         # display(HTML("""
         # <style>
         # .rendered_html table, .rendered_html th, .rendered_html tr, .rendered_html td {
@@ -85,9 +95,7 @@ class GameBoard:
         # </style>
         # """+board.html_str()))
         print(self.board)
-        if self.check_win(x, y):
-            print("Winner!\n\n")
-        else:
+        if not self.check_win():
             next = "RED" if self.next_player == RED else "BLACK"
             print(f"Next player: {next}({self.next_player})")
 
@@ -95,10 +103,32 @@ if __name__=='__main__':
 
     board = GameBoard(width=4, height=4, connect_num=3)
 
+    pre_input = input("Welcome to connect4! Press Enter to Start: ")
+
     while(True):
-        kb = input("Index of next move, or non-int to quit: ")
         try:
-            board.make_move(int(kb))
+            if pre_input:
+                for d in map(int, pre_input):
+                    print(f"\nplacing at column {d}")
+                    board.make_move(d)
+                    board.print_board()
+                    if board.check_win():
+                        print("Winner!\n")
+                        break
+                    elif board.state == DRAW:
+                        print("Draw!\n")
+                        break
+                print("\nEnding Game")
+                break
+            else:
+                kb = input("Index of next move(s), or non-int to quit: ")
+                move = int(kb)
+                board.print_board()
+                if board.check_win():
+                    print("Winner!\n")
+                    break
         except ValueError:
             print("\nEnding Game")
             break
+
+#                           0011223
