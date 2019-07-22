@@ -1,4 +1,6 @@
-class GameResult:
+from enum import Enum
+
+class GameResult(Enum):
     '''
     Static vars to represent different game states
     '''
