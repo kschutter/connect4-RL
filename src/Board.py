@@ -65,11 +65,11 @@ class Board:
         '''
         self.state.fill(EMPTY)
 
-    def is_legal(self, pos: int) -> bool:
+    def is_legal(self, ind: int) -> bool:
         '''
         Tests whether a board position can be played, i.e. is currently empty
         '''
-        return (0 <= pos < self.BOARD_SIZE) and (self.state[pos] == EMPTY)
+        return (0 <= ind < self.WIDTH) and (sum(self.state[col::self.WIDTH]) < self.HEIGHT)
 
     def move(self, index: int, player):
         """
@@ -224,14 +224,15 @@ class Board:
 if __name__=='__main__':
     board = Board()
 
-    movelist = [[0,1],
-                [0,-1],
-                [0,1],
-                [1,1],
-                [1,1],
-                [2,1]]
-    for move in movelist:
-        print(f"moving at {move[0]}")
-        res = board.move(move[0], move[1])[1]
+    from Players import RandomPlayer
+    random_player = RandomPlayer(BLACK)
+    current_player = RED
+    while sum(abs(board.state) <= board.BOARD_SIZE):
+        if current_player == RED:
+            index = int(input("Next move: "))
+        else:
+            index = random_player.make_move(board)[0]
+
+        board.move(index, current_player)
+        current_player *= -1
         print(board)
-        print(f"GameResult: {res}")
