@@ -7,6 +7,8 @@ class RandomPlayer:
 
     def make_move(self, board):
         index = np.random.randint(0, board.WIDTH)
-        while not board.is_legal(index):
+        legal = board.is_legal(index)
+        while not legal:
             index = np.random.randint(0, board.WIDTH)
+            legal = board.is_legal(index)
         return (index, self.color)

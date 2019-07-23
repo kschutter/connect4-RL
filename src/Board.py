@@ -65,11 +65,12 @@ class Board:
         '''
         self.state.fill(EMPTY)
 
-    def is_legal(self, ind: int) -> bool:
+    def is_legal(self, index: int):
         '''
         Tests whether a board position can be played, i.e. is currently empty
         '''
-        return (0 <= ind < self.WIDTH) and (sum(self.state[col::self.WIDTH]) < self.HEIGHT)
+        row, col = self.pos_to_coord(index)
+        return self.state[col] != EMPTY or index < 0 or index >= self.WIDTH
 
     def move(self, index: int, player):
         """
@@ -77,7 +78,7 @@ class Board:
         Throws a ValueError if the position is not EMPTY
         returns the new state of the board, the game result after this move, and whether this move has finished the game
         """
-        if self.state[index] != EMPTY or index < 0 or index >= self.WIDTH:
+        if self.is_legal(index):
             print('Illegal move')
             raise ValueError("Invalid move")
 
@@ -93,23 +94,6 @@ class Board:
             return self.state, GameResult.DRAW, True
 
         return self.state, GameResult.NOT_FINISHED, False
-
-        # Deprecated
-    # def apply_dir(self, pos: int, direction: (int, int)) -> int:
-    #     """
-    #     Applies 2D direction dir to 1D position pos.
-    #     Returns the resulting 1D position, or -1 if the resulting position
-    #     would not be a valid board position.
-    #     """
-    #     row, col = pos_to_coord(pos)
-    #     row += direction[0]
-    #     if row < 0 or row >= self.HEIGHT:
-    #         return -1
-    #     col += direction[1]
-    #     if col < 0 or col > self.WIDTH:
-    #         return -1
-    #
-    #     return coord_to_pos((row, col))
 
     def check_win_in_row(self, row) -> bool:
         """
@@ -189,9 +173,9 @@ class Board:
             return '&ensp;' if html else ' '
 
         if (self.state[pos]) == RED:
-            return 'O'
+            return 'X'
 
-        return 'X'
+        return 'O'
 
     def state_to_charlist(self, html=False):
         '''
@@ -225,14 +209,3 @@ if __name__=='__main__':
     board = Board()
 
     from Players import RandomPlayer
-    random_player = RandomPlayer(BLACK)
-    current_player = RED
-    while sum(abs(board.state) <= board.BOARD_SIZE):
-        if current_player == RED:
-            index = int(input("Next move: "))
-        else:
-            index = random_player.make_move(board)[0]
-
-        board.move(index, current_player)
-        current_player *= -1
-        print(board)
