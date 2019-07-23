@@ -23,18 +23,6 @@ class Board:
         else:
             self.state = s.copy()
 
-    def hash_value(self):
-        '''
-        Encode the current state of the game (board positions) as an integer.
-        Will be used for caching evaluations
-        '''
-        res = 0
-        for i in range(BOARD_SIZE):
-            res *= 3
-            res += 2 if self.state[i] == BLACK else 1
-
-        return res
-
     def coord_to_pos(self, coord: (int, int)):
         '''
         Converts a 2D board coordinate to a 1D board position.
@@ -58,7 +46,7 @@ class Board:
             if self.state[ind + self.WIDTH] == EMPTY:
                 ind += self.WIDTH
         return ind
-
+        
     def reset(self):
         '''
         Resets the game board. All fields are set to be EMPTY.
@@ -69,8 +57,7 @@ class Board:
         '''
         Tests whether a board position can be played, i.e. is currently empty
         '''
-        row, col = self.pos_to_coord(index)
-        return self.state[col] != EMPTY or index < 0 or index >= self.WIDTH
+        return self.state[index] == EMPTY and 0 <= index < self.WIDTH
 
     def move(self, index: int, player):
         """
@@ -78,7 +65,7 @@ class Board:
         Throws a ValueError if the position is not EMPTY
         returns the new state of the board, the game result after this move, and whether this move has finished the game
         """
-        if self.is_legal(index):
+        if not self.is_legal(index):
             print('Illegal move')
             raise ValueError("Invalid move")
 

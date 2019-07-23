@@ -1,6 +1,9 @@
 import numpy as np
 
 class RandomPlayer:
+    '''
+    The dumbest of players - will completely guess each move
+    '''
 
     def __init__(self, color):
         self.color = color
@@ -11,4 +14,5 @@ class RandomPlayer:
         while not legal:
             index = np.random.randint(0, board.WIDTH)
             legal = board.is_legal(index)
-        return (index, self.color)
+
+        return board.move(self.color, index)
