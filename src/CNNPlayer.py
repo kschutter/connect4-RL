@@ -111,7 +111,7 @@ class QNetwork:
             self.train_step = tf.train.GradientDescentOptimizer(learning_rate=self.learningRate). \
                 minimize(self.total_loss, name='train')
 
-            self.graph = tf.get_default_graph()
+        self.graph = tf.get_default_graph()
 
 
 class ReplayBuffer:
