@@ -46,20 +46,20 @@ class Board:
             if self.state[ind + self.WIDTH] == EMPTY:
                 ind += self.WIDTH
         return ind
-        
+
     def reset(self):
         '''
         Resets the game board. All fields are set to be EMPTY.
         '''
         self.state.fill(EMPTY)
 
-    def is_legal(self, index: int):
+    def is_legal(self, index):
         '''
         Tests whether a board position can be played, i.e. is currently empty
         '''
         return self.state[index] == EMPTY and 0 <= index < self.WIDTH
 
-    def move(self, index: int, player):
+    def move(self, index, player):
         """
         Drops a piece of side "side" at index "index". The position is to be provided as 1D.
         Throws a ValueError if the position is not EMPTY
@@ -81,6 +81,15 @@ class Board:
             return self.state, GameResult.DRAW, True
 
         return self.state, GameResult.NOT_FINISHED, False
+
+    def random_empty_spot(self):
+        '''
+        Returns a valid random move index, for exploration
+        '''
+        index = np.random.randint(0, self.WIDTH)
+        while not self.is_legal(index):
+            index = np.random.randint(0, self.WIDTH)
+        return index
 
     def check_win_in_row(self, row) -> bool:
         """

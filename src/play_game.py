@@ -1,6 +1,9 @@
-from Players import RandomPlayer
+import tensorflow as tf
+
+from Player import RandomPlayer
 from Board import Board, RED, BLACK
 from GameResult import GameResult
+from CNNPlayer import CNNPlayer
 
 def play_game(board, player1, player2, verbose=False):
 
@@ -53,33 +56,69 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total:
         print()
 
-def play_games(num_games, red_player, black_player) -> (int, int, int):
+def play_games(num_games, red_player, black_player, verbose=False) -> (int, int, int):
     '''
     Conduct a connect4 game between two given types of players
     num_games times, returning the final scores
     '''
     board = Board()
-    p1 = red_player(RED)
-    p2 = black_player(BLACK)
     p1_wins = p2_wins = draws = 0
 
     for _ in range(num_games):
-        result, board = play_game(board, p1, p2)
+        result, board = play_game(board, p1, p2, verbose)
         if result == GameResult.RED_WIN:
             p1_wins += 1
-        elif result == GameResult.DRAW:
+        elif result == GameResult.BLACK_WIN:
+            p2_wins += 1
+        else:
             draws += 1
 
-        printProgressBar (_, num_games)
+    return (p1_wins, p2_wins, draws)
 
-    return (p1_wins, num_games-p1_wins-draws, draws)
+def print_stats(red_wins, black_wins, draws):
 
-if __name__=='__main__':
-
-    num_games = 10000
-    red_wins, black_wins, draws = play_games(num_games, RandomPlayer, RandomPlayer)
+    red_wins = sum(red_wins)
+    black_wins = sum(black_wins)
+    draws = sum(draws)
+    num_games = red_wins + black_wins + draws
     print(f'''\nAfter {num_games} games we have:\n
             RED wins:\t{red_wins}, {red_wins/num_games*100:.2f}%\n
             BLACK wins:\t{black_wins}, {black_wins/num_games*100:.2f}%\n
             Draws:\t{draws}, {draws/num_games*100:.2f}%\n
             ''')
+
+def eval_players(p1, p2, games_per_set=100, num_sets=100,
+                 writer=None, verbose=False):
+
+    '''
+    Pit two given players against each other, logging stats over time, not just at the end
+    '''
+
+    p1_wins = []
+    p2_wins = []
+    draws = []
+    game_number = []
+    game_counter = 0
+
+    for i in range(num_sets):
+        p1win, p2win, draw = play_games(games_per_set, p1, p2, verbose)
+        p1_wins.append(p1win)
+        p2_wins.append(p2win)
+        draws.append(draw)
+        game_counter = game_counter + 1
+        game_number.append(game_counter)
+        if writer is not None:
+            summary = tf.Summary(value=[tf.Summary.Value(tag='Player 1 Win', simple_value=p1win),
+                                        tf.Summary.Value(tag='Player 2 Win', simple_value=p2win),
+                                        tf.Summary.Value(tag='Draw', simple_value=draw)])
+            writer.add_summary(summary, game_counter)
+
+        printProgressBar (i, num_sets)
+    return game_number, p1_wins, p2_wins, draws
+
+if __name__=='__main__':
+
+    p1 = CNNPlayer(name='CNNPlayer', color=RED)
+    p2 = RandomPlayer(BLACK)
+    game_number, red_wins, black_wins, draws = eval_players(p1, p2)
+    print_stats(red_wins, black_wins, draws)
