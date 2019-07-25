@@ -6,5 +6,5 @@ class GameResult(Enum):
     '''
     NOT_FINISHED = 0
     RED_WIN = 1
-    BLACK_WIN = 2
-    DRAW = 3
+    BLACK_WIN = -1
+    DRAW = 2

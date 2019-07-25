@@ -81,7 +81,7 @@ class QNetwork:
             net = self.add_dense_layer(net, board_size * 3 * 9, tf.nn.relu)
 
             self.value = self.add_dense_layer(net, 1, name='state_q_value')
-            self.advantage = self.add_dense_layer(net, board_width, name='action_advantage')
+            self.advantage = self.add_dense_layer(net, board_size, name='action_advantage')
 
             self.q_values = tf.add(self.value, tf.subtract(self.advantage,
                                                            tf.reduce_mean(self.advantage, axis=1, keepdims=True)),
@@ -90,7 +90,7 @@ class QNetwork:
             self.probabilities = tf.nn.softmax(self.q_values, name='probabilities')
 
             self.actions = tf.placeholder(shape=[None], dtype=tf.int32, name='actions')
-            self.actions_onehot = tf.one_hot(self.actions, board_width, dtype=tf.float32)
+            self.actions_onehot = tf.one_hot(self.actions, board_size, dtype=tf.float32)
             self.q = tf.reduce_sum(tf.multiply(self.q_values, self.actions_onehot), axis=1, name="selected_action_q")
 
             tf.summary.histogram("Action_Q_values", self.q)

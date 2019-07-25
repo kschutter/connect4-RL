@@ -22,7 +22,7 @@ class Board:
         if state is None:
             self.state = np.zeros(shape=self.BOARD_SIZE, dtype=int)
         else:
-            self.state = s.copy()
+            self.state = state.copy()
 
     def coord_to_pos(self, coord: (int, int)):
         '''
@@ -54,19 +54,21 @@ class Board:
         '''
         self.state.fill(EMPTY)
 
-    def is_legal(self, index):
+    def is_legal(self, move):
         '''
         Tests whether a board position can be played, i.e. is currently empty
         '''
-        return self.state[index] == EMPTY and 0 <= index < self.WIDTH
+        col = move % self.WIDTH
+        return self.state[col] == EMPTY and 0 <= col < self.WIDTH
 
-    def move(self, index, player):
+    def move(self, move, player):
         """
-        Drops a piece of side "side" at index "index". The position is to be provided as 1D.
+        Drops a piece of side "side" at column matching move. The move is to be provided as 1D.
         Throws a ValueError if the position is not EMPTY
-        returns the new state of the board, the game result after this move, and whether this move has finished the game
+        returns the game result after this move, and whether this move has finished the game
         """
-        if not self.is_legal(index):
+        index = move % self.WIDTH
+        if not self.is_legal(move):
             print('Illegal move')
             raise ValueError("Invalid move")
 
@@ -75,13 +77,13 @@ class Board:
         self.state[position] = player
 
         if self.check_win(position):
-            return self.state, GameResult.RED_WIN if player == RED else GameResult.BLACK_WIN, True
+            return (GameResult.RED_WIN if player == RED else GameResult.BLACK_WIN, True)
 
         # Check if the board has been filled
         if np.sum(np.abs(self.state)) == self.BOARD_SIZE:
-            return self.state, GameResult.DRAW, True
+            return (GameResult.DRAW, True)
 
-        return self.state, GameResult.NOT_FINISHED, False
+        return (GameResult.NOT_FINISHED, False)
 
     def random_empty_spot(self):
         '''

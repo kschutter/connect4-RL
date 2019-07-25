@@ -50,7 +50,7 @@ class QNetwork:
         with tf.variable_scope(name):
             self.input_positions = tf.placeholder(tf.float32, shape=(None, BOARD_SIZE * 3), name='inputs')
 
-            self.target_input = tf.placeholder(tf.float32, shape=(None, BOARD_SIZE/6), name='targets')
+            self.target_input = tf.placeholder(tf.float32, shape=(None, BOARD_SIZE), name='targets')
 
             net = self.input_positions
 
@@ -96,6 +96,7 @@ class NNQPlayer(Player):
         :param training: Flag indicating if the Neural Network should adjust its weights based on the game outcome
         (True), or just play the game without further adjusting its weights (False).
         """
+        tf.reset_default_graph()
         self.reward_discount = reward_discount
         self.win_value = win_value
         self.draw_value = draw_value
@@ -183,7 +184,7 @@ class NNQPlayer(Player):
         self.values_log.append(qvalues)
 
         # We execute the move and return the result
-        _, res, finished = board.move(move, self.side)
+        res, finished = board.move(move, self.color)
         return res, finished
 
     def final_result(self, result: GameResult):
