@@ -3,7 +3,7 @@ from Board import EMPTY, RED, BLACK
 
 class Player:
     def __init__(self, color=None):
-        self.color = color
+        pass
 
 class RandomPlayer(Player):
     '''

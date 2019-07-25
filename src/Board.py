@@ -4,6 +4,7 @@ from GameResult import GameResult
 EMPTY = 0
 RED = 1
 BLACK = -1
+BOARD_SIZE = 42
 
 class Board:
 
