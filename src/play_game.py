@@ -116,11 +116,13 @@ def eval_players(p1, p2, games_per_set=100, num_sets=100,
 
     for i in range(num_sets):
         p1win, p2win, draw = play_games(games_per_set, p1, p2, i/num_sets, False)
+
         p1_wins.append(p1win)
         p2_wins.append(p2win)
         draws.append(draw)
         game_counter = game_counter + 1
         game_number.append(game_counter)
+        
         if writer is not None:
             summary = tf.Summary(value=[tf.Summary.Value(tag='Player 1 Win', simple_value=p1win),
                                         tf.Summary.Value(tag='Player 2 Win', simple_value=p2win),
