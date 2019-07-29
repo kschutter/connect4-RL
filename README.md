@@ -1,1 +1,1 @@
-# connect4-RL
+<iframe src="http://docs.google.com/gview?url=https://github.com/kschutter/connect4-RL/blob/master/KyleSchutter_PresentationPoster.pdf&embedded=true" style="width:718px; height:700px;" frameborder="0"></iframe>
