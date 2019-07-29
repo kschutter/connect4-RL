@@ -69,6 +69,9 @@ class NNQPlayer(Player):
     Implements a Tic Tac Toe player based on a Reinforcement Neural Network learning the Tic Tac Toe Q function
     """
 
+    def switch_color(self):
+        super()
+
     def board_state_to_nn_input(self, state: np.ndarray) -> np.ndarray:
         """
         Converts a Tic Tac Tow board state to an input feature vector for the Neural Network. The input feature vector
@@ -195,11 +198,11 @@ class NNQPlayer(Player):
         """
 
         # Compute the final reward based on the game outcome
-        if (result == GameResult.NAUGHT_WIN and self.side == NAUGHT) or (
-                result == GameResult.CROSS_WIN and self.side == CROSS):
+        if (result == GameResult.RED_WIN and self.color == RED) or (
+                result == GameResult.BLACK_WIN and self.color == BLACK):
             reward = self.win_value  # type: float
-        elif (result == GameResult.NAUGHT_WIN and self.side == CROSS) or (
-                result == GameResult.CROSS_WIN and self.side == NAUGHT):
+        elif (result == GameResult.BLACK_WIN and self.color == RED) or (
+                result == GameResult.RED_WIN and self.color == BLACK):
             reward = self.loss_value  # type: float
         elif result == GameResult.DRAW:
             reward = self.draw_value  # type: float

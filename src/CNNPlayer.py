@@ -343,11 +343,11 @@ class CNNPlayer():
         self.game_counter += 1
 
         # Compute the final reward based on the game outcome
-        if (result == GameResult.NAUGHT_WIN and self.side == NAUGHT) or (
-                result == GameResult.CROSS_WIN and self.side == CROSS):
+        if (result == GameResult.BLACK_WIN and self.side == BLACK) or (
+                result == GameResult.RED_WIN and self.side == RED):
             reward = self.win_value  # type: float
-        elif (result == GameResult.NAUGHT_WIN and self.side == CROSS) or (
-                result == GameResult.CROSS_WIN and self.side == NAUGHT):
+        elif (result == GameResult.BLACK_WIN and self.side == RED) or (
+                result == GameResult.RED_WIN and self.side == BLACK):
             reward = self.loss_value  # type: float
         elif result == GameResult.DRAW:
             reward = self.draw_value  # type: float

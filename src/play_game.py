@@ -1,19 +1,21 @@
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
-from Player import RandomPlayer
+import Player
 from Board import Board, RED, BLACK
 from GameResult import GameResult
 from CNNPlayer import CNNPlayer
+from NNPlayer import NNQPlayer
+from TFSessionManager import TFSessionManager
 
-def play_game(board, player1, player2, verbose=False):
+def play_game(board, player1, player2, dumb, verbose=False):
 
     board.reset()
-    current_player = RED
     finished = False
 
     while not finished:
 
-        _, result, finished = player1.make_move(board)
+        result, finished = player1.make_move(board, 0)
 
         if finished:
             if result == GameResult.DRAW:
@@ -21,7 +23,7 @@ def play_game(board, player1, player2, verbose=False):
             else:
                 final_result =  GameResult.RED_WIN
         else:
-            _, result, finished = player2.make_move(board)
+            result, finished = player2.make_move(board, dumb)
             if finished:
                 if result == GameResult.DRAW:
                     final_result =  GameResult.DRAW
@@ -33,6 +35,9 @@ def play_game(board, player1, player2, verbose=False):
             elif result == GameResult.BLACK_WIN:
                 print("BLACK wins!")
 
+
+    p1.final_result(result)
+    p2.final_result(result)
     return final_result, board
 
 # https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
@@ -56,22 +61,26 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total:
         print()
 
-def play_games(num_games, red_player, black_player, verbose=False) -> (int, int, int):
+def play_games(num_games, p1, p2, dumb, verbose=False) -> (int, int, int):
     '''
     Conduct a connect4 game between two given types of players
     num_games times, returning the final scores
     '''
     board = Board()
     p1_wins = p2_wins = draws = 0
+    p1.color = RED
+    p2.color = BLACK
 
     for _ in range(num_games):
-        result, board = play_game(board, p1, p2, verbose)
+        result, board = play_game(board, p1, p2, dumb, verbose)
         if result == GameResult.RED_WIN:
             p1_wins += 1
         elif result == GameResult.BLACK_WIN:
             p2_wins += 1
         else:
             draws += 1
+        p1.switch_color()
+        p2.switch_color()
 
     return (p1_wins, p2_wins, draws)
 
@@ -101,7 +110,7 @@ def eval_players(p1, p2, games_per_set=100, num_sets=100,
     game_counter = 0
 
     for i in range(num_sets):
-        p1win, p2win, draw = play_games(games_per_set, p1, p2, verbose)
+        p1win, p2win, draw = play_games(games_per_set, p1, p2, i/num_sets, False)
         p1_wins.append(p1win)
         p2_wins.append(p2win)
         draws.append(draw)
@@ -113,12 +122,68 @@ def eval_players(p1, p2, games_per_set=100, num_sets=100,
                                         tf.Summary.Value(tag='Draw', simple_value=draw)])
             writer.add_summary(summary, game_counter)
 
-        printProgressBar (i, num_sets)
     return game_number, p1_wins, p2_wins, draws
 
 if __name__=='__main__':
 
-    p1 = CNNPlayer(name='CNNPlayer', color=RED)
-    p2 = RandomPlayer(BLACK)
-    game_number, red_wins, black_wins, draws = eval_players(p1, p2)
-    print_stats(red_wins, black_wins, draws)
+    board = Board()
+    # CNNPlayer = NNQPlayer(name='CNNPlayer')
+    # nnplayer = NNQPlayer(name="NNQPlayer2")
+    # cnnplayer = CNNPlayer(name="CNNPlayer")
+    randish = Player.RandomishPlayer(RED)
+    randish2 = Player.RandomishPlayer(BLACK)
+    rand2 = Player.RandomPlayer(RED)
+
+    p1_wins = []
+    p2_wins = []
+    draws = []
+    game_number = []
+    game_counter = 0
+
+    num_sets = 10
+    games_per_set = 100
+    num_training_sets = 100
+
+    TFSessionManager.set_session(tf.Session())
+
+    TFSessionManager.get_session().run(tf.global_variables_initializer())
+    writer = tf.summary.FileWriter('log', TFSessionManager.get_session().graph)
+
+    # nnplayer rndplayer mm_player
+    p1_t = randish
+    p2_t = randish2
+
+    p1 = p1_t
+    p2 = p2_t
+
+    # nnplayer.training= False
+    # nnplayer2.training= False
+
+    for i in range(num_training_sets):
+        p1win, p2win, draw = play_games(games_per_set, p1_t, p2_t, 0, False)
+        p1_wins.append(p1win)
+        p2_wins.append(p2win)
+        draws.append(draw)
+        game_counter = game_counter + 1
+        game_number.append(game_counter)
+        printProgressBar (i, num_training_sets)
+
+    # nnplayer.training= False
+    # nnplayer2.training= False
+
+    for i in range(num_sets):
+        p1win, p2win, draw = play_games(games_per_set, p1, p2, 0, False)
+        p1_wins.append(p1win)
+        p2_wins.append(p2win)
+        draws.append(draw)
+        game_counter = game_counter + 1
+        game_number.append(game_counter)
+        printProgressBar (i, num_sets)
+
+    writer.close()
+    TFSessionManager.set_session(None)
+
+    p = plt.plot(game_number, draws, 'r-', game_number, p1_wins, 'g-', game_number, p2_wins, 'b-')
+    plt.title("CNN Player vs One-Ahead Player")
+
+    plt.show()
