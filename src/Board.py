@@ -203,8 +203,3 @@ class Board:
                     board_str += '|'
             board_str += "\n"
         return board_str
-
-if __name__=='__main__':
-    board = Board()
-
-    from Players import RandomPlayer
