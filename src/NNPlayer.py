@@ -8,15 +8,13 @@ from GameResult import GameResult
 
 
 class QNetwork:
-    """
+    '''
     Contains a TensorFlow graph which is suitable for learning the Tic Tac Toe Q function
-    """
+    '''
 
-    def __init__(self, name: str, learning_rate: float):
+    def __init__(self, name, learning_rate):
         """
         Constructor for QNetwork. Takes a name and a learning rate for the GradientDescentOptimizer
-        :param name: Name of the network
-        :param learning_rate: Learning rate for the GradientDescentOptimizer
         """
         self.learningRate = learning_rate
         self.name = name
@@ -27,26 +25,20 @@ class QNetwork:
         self.train_step = None
         self.build_graph(name)
 
-    def add_dense_layer(self, input_tensor: tf.Tensor, output_size: int, activation_fn=None,
-                        name: str = None) -> tf.Tensor:
+    def add_dense_layer(self, input_tensor: tf.Tensor, output_size, activation_fn=None,
+                        name=None):
         """
         Adds a dense Neural Net layer to network input_tensor
-        :param input_tensor: The layer to which we should add the new layer
-        :param output_size: The output size of the new layer
-        :param activation_fn: The activation function for the new layer, or None if no activation function
-        should be used
-        :param name: The optional name of the layer. Useful for saving a loading a TensorFlow graph
-        :return: A new dense layer attached to the `input_tensor`
         """
         return tf.layers.dense(input_tensor, output_size, activation=activation_fn,
                                kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
                                name=name)
 
-    def build_graph(self, name: str):
-        """
+    def build_graph(self, name):
+        '''
         Builds a new TensorFlow graph with scope `name`
-        :param name: The scope for the graph. Needs to be unique for the session.
-        """
+        name: The scope for the graph. Needs to be unique for the session.
+        '''
         with tf.variable_scope(name):
             self.input_positions = tf.placeholder(tf.float32, shape=(None, BOARD_SIZE * 3), name='inputs')
 
@@ -65,40 +57,30 @@ class QNetwork:
 
 
 class NNQPlayer(Player):
-    """
+    '''
     Implements a Tic Tac Toe player based on a Reinforcement Neural Network learning the Tic Tac Toe Q function
-    """
+    '''
 
     def switch_color(self):
         super()
 
-    def board_state_to_nn_input(self, state: np.ndarray) -> np.ndarray:
+    def board_state_to_nn_input(self, state):
         """
         Converts a Tic Tac Tow board state to an input feature vector for the Neural Network. The input feature vector
         is a bit array of size 27. The first 9 bits are set to 1 on positions containing the player's pieces, the second
         9 bits are set to 1 on positions with our opponents pieces, and the final 9 bits are set on empty positions on
         the board.
-        :param state: The board state that is to be converted to a feature vector.
-        :return: The feature vector representing the input Tic Tac Toe board state.
         """
         res = np.array([(state == self.color).astype(int),
                         (state == (self.color * -1)).astype(int),
                         (state == EMPTY).astype(int)])
         return res.reshape(-1)
 
-    def __init__(self, name: str, reward_discount: float = 0.95, win_value: float = 1.0, draw_value: float = 0.0,
-                 loss_value: float = -1.0, learning_rate: float = 0.01, training: bool = True):
-        """
+    def __init__(self, name, reward_discount=0.95, win_value=1.0, draw_value=0.0,
+                 loss_value=-1.0, learning_rate=0.01, training=True):
+        '''
         Constructor for the Neural Network player.
-        :param name: The name of the player. Also the name of its TensorFlow scope. Needs to be unique
-        :param reward_discount: The factor by which we discount the maximum Q value of the following state
-        :param win_value: The reward for winning a game
-        :param draw_value: The reward for playing a draw
-        :param loss_value: The reward for losing a game
-        :param learning_rate: The learning rate of the Neural Network
-        :param training: Flag indicating if the Neural Network should adjust its weights based on the game outcome
-        (True), or just play the game without further adjusting its weights (False).
-        """
+        '''
         tf.reset_default_graph()
         self.reward_discount = reward_discount
         self.win_value = win_value
@@ -114,21 +96,20 @@ class NNQPlayer(Player):
         self.training = training
         super().__init__()
 
-    def new_game(self, color: int):
-        """
+    def new_game(self, color):
+        '''
         Prepares for a new games. Store which side we play and clear internal data structures for the last game.
-        :param side: The side it will play in the new game.
-        """
+        '''
         self.color = color
         self.board_position_log = []
         self.action_log = []
         self.next_max_log = []
         self.values_log = []
 
-    def calculate_targets(self) -> [np.ndarray]:
-        """
+    def calculate_targets(self):
+        '''
         Based on the recorded moves, compute updated estimates of the Q values for the network to learn
-        """
+        '''
         game_length = len(self.action_log)
         targets = []
 
@@ -140,23 +121,19 @@ class NNQPlayer(Player):
 
         return targets
 
-    def get_probs(self, input_pos: np.ndarray) -> ([float], [float]):
-        """
+    def get_probs(self, input_pos):
+        '''
         Feeds the feature vector `input_pos` which encodes a board state into the Neural Network and computes the
         Q values and corresponding probabilities for all moves (including illegal ones).
-        :param input_pos: The feature vector to be fed into the Neural Network.
-        :return: A tuple of probabilities and q values of all actions (including illegal ones).
-        """
+        '''
         probs, qvalues = TFSN.get_session().run([self.nn.probabilities, self.nn.q_values],
                                                 feed_dict={self.nn.input_positions: [input_pos]})
         return probs[0], qvalues[0]
 
-    def make_move(self, board: Board) -> (GameResult, bool):
-        """
+    def make_move(self, board):
+        '''
         Implements the Player interface and makes a move on Board `board`
-        :param board: The Board to make a move on
-        :return: A tuple of the GameResult and a flag indicating if the game is over after this move.
-        """
+        '''
 
         # We record all game positions to feed them into the NN for training with the corresponding updated Q
         # values.
@@ -190,12 +167,11 @@ class NNQPlayer(Player):
         res, finished = board.move(move, self.color)
         return res, finished
 
-    def final_result(self, result: GameResult):
-        """
+    def final_result(self, result):
+        '''
         This method is called once the game is over. If `self.training` is True, we execute a training run for
         the Neural Network.
-        :param result: The result of the game that just finished.
-        """
+        '''
 
         # Compute the final reward based on the game outcome
         if (result == GameResult.RED_WIN and self.color == RED) or (

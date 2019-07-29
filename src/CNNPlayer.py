@@ -301,7 +301,7 @@ class CNNPlayer():
 
         return probabilities, qvals
 
-    def make_move(self, board: Board) -> (GameResult, bool):
+    def make_move(self, board) -> (GameResult, bool):
         """
         Implements the Player interface and makes a move on Board 'board'
         :param board: The Board to make a move on

@@ -8,14 +8,17 @@ from CNNPlayer import CNNPlayer
 from NNPlayer import NNQPlayer
 from TFSessionManager import TFSessionManager
 
-def play_game(board, player1, player2, dumb, verbose=False):
+def play_game(board, player1, player2, verbose=False):
+    '''
+    Play out a single game, returning a GameResult and the final board
+    '''
 
     board.reset()
     finished = False
 
     while not finished:
 
-        result, finished = player1.make_move(board, 0)
+        result, finished = player1.make_move(board)
 
         if finished:
             if result == GameResult.DRAW:
@@ -23,7 +26,7 @@ def play_game(board, player1, player2, dumb, verbose=False):
             else:
                 final_result =  GameResult.RED_WIN
         else:
-            result, finished = player2.make_move(board, dumb)
+            result, finished = player2.make_move(board)
             if finished:
                 if result == GameResult.DRAW:
                     final_result =  GameResult.DRAW
@@ -42,7 +45,7 @@ def play_game(board, player1, player2, dumb, verbose=False):
 
 # https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 50, fill = '█'):
-    """
+    '''
     Call in a loop to create terminal progress bar
     @params:
         iteration   - Required  : current iteration (Int)
@@ -52,7 +55,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         decimals    - Optional  : positive number of decimals in percent complete (Int)
         length      - Optional  : character length of bar (Int)
         fill        - Optional  : bar fill character (Str)
-    """
+    '''
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
@@ -61,7 +64,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total:
         print()
 
-def play_games(num_games, p1, p2, dumb, verbose=False) -> (int, int, int):
+def play_games(num_games, p1, p2, verbose=False) -> (int, int, int):
     '''
     Conduct a connect4 game between two given types of players
     num_games times, returning the final scores
@@ -72,7 +75,7 @@ def play_games(num_games, p1, p2, dumb, verbose=False) -> (int, int, int):
     p2.color = BLACK
 
     for _ in range(num_games):
-        result, board = play_game(board, p1, p2, dumb, verbose)
+        result, board = play_game(board, p1, p2, verbose)
         if result == GameResult.RED_WIN:
             p1_wins += 1
         elif result == GameResult.BLACK_WIN:
@@ -85,6 +88,9 @@ def play_games(num_games, p1, p2, dumb, verbose=False) -> (int, int, int):
     return (p1_wins, p2_wins, draws)
 
 def print_stats(red_wins, black_wins, draws):
+    '''
+    Print basic set stats to console
+    '''
 
     red_wins = sum(red_wins)
     black_wins = sum(black_wins)
@@ -98,7 +104,6 @@ def print_stats(red_wins, black_wins, draws):
 
 def eval_players(p1, p2, games_per_set=100, num_sets=100,
                  writer=None, verbose=False):
-
     '''
     Pit two given players against each other, logging stats over time, not just at the end
     '''
@@ -127,12 +132,11 @@ def eval_players(p1, p2, games_per_set=100, num_sets=100,
 if __name__=='__main__':
 
     board = Board()
-    # CNNPlayer = NNQPlayer(name='CNNPlayer')
-    # nnplayer = NNQPlayer(name="NNQPlayer2")
-    # cnnplayer = CNNPlayer(name="CNNPlayer")
+    # CNNPlayer = CNNPlayer(name='CNNPlayer')
+    nnplayer = NNQPlayer(name="NNQPlayer")
     randish = Player.RandomishPlayer(RED)
-    randish2 = Player.RandomishPlayer(BLACK)
-    rand2 = Player.RandomPlayer(RED)
+    # randish2 = Player.RandomishPlayer(BLACK)
+    # rand = Player.RandomPlayer(RED)
 
     p1_wins = []
     p2_wins = []
@@ -142,25 +146,21 @@ if __name__=='__main__':
 
     num_sets = 10
     games_per_set = 100
-    num_training_sets = 100
+    num_training_sets = 1000
 
     TFSessionManager.set_session(tf.Session())
 
     TFSessionManager.get_session().run(tf.global_variables_initializer())
     writer = tf.summary.FileWriter('log', TFSessionManager.get_session().graph)
 
-    # nnplayer rndplayer mm_player
-    p1_t = randish
-    p2_t = randish2
+    p1_t = nnplayer
+    p2_t = randish
 
     p1 = p1_t
     p2 = p2_t
 
-    # nnplayer.training= False
-    # nnplayer2.training= False
-
     for i in range(num_training_sets):
-        p1win, p2win, draw = play_games(games_per_set, p1_t, p2_t, 0, False)
+        p1win, p2win, draw = play_games(games_per_set, p1_t, p2_t, False)
         p1_wins.append(p1win)
         p2_wins.append(p2win)
         draws.append(draw)
@@ -168,11 +168,8 @@ if __name__=='__main__':
         game_number.append(game_counter)
         printProgressBar (i, num_training_sets)
 
-    # nnplayer.training= False
-    # nnplayer2.training= False
-
     for i in range(num_sets):
-        p1win, p2win, draw = play_games(games_per_set, p1, p2, 0, False)
+        p1win, p2win, draw = play_games(games_per_set, p1, p2, False)
         p1_wins.append(p1win)
         p2_wins.append(p2win)
         draws.append(draw)

@@ -20,7 +20,7 @@ class RandomPlayer(Player):
     def __init__(self, color):
         super().__init__(color)
 
-    def make_move(self, board, dumb):
+    def make_move(self, board):
         '''
         Only ever make random moves
         '''
@@ -41,14 +41,14 @@ class RandomishPlayer(Player):
     def __init__(self, color):
         super().__init__(color)
 
-    def make_move(self, board, dumb):
+    def make_move(self, board):
         '''
         Make winning moves, if none block winning moves, if non random move
         '''
 
         index = board.random_empty_spot()
 
-        for i in range(board.WIDTH-dumb):
+        for i in range(board.WIDTH):
             temp_board = Board(state=board.state)
             if temp_board.is_legal(i):
                 res, finished = temp_board.move(i, self.color)
